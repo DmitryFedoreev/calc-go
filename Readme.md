@@ -1,3 +1,3 @@
 ## Пример работы программы
 
-[![asciicast](https://asciinema.org/a/sdf0WzbtiGuQVsiXHOHxWztIr.svg)](https://asciinema.org/a/sdf0WzbtiGuQVsiXHOHxWztIr)
+[![asciicast](https://asciinema.org/a/4NqkEo0Xou0GS7LpuzGabcPpw.svg)](https://asciinema.org/a/4NqkEo0Xou0GS7LpuzGabcPpw)
