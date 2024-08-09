@@ -1,3 +1,4 @@
-## Пример работы программы
+## Инструкция по запуску
 
-[![asciicast](https://asciinema.org/a/4NqkEo0Xou0GS7LpuzGabcPpw.svg)](https://asciinema.org/a/4NqkEo0Xou0GS7LpuzGabcPpw)
+1. Ввести команду - go run main.go
+2. Написать выражение - 5-2 или V-II

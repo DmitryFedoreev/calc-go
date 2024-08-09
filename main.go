@@ -3,130 +3,126 @@ package main
 import (
 	"errors"
 	"fmt"
-	"os"
-	"regexp"
 	"strconv"
 	"strings"
 )
 
+// Словарь для преобразования римских чисел в арабские и наоборот
 var romanToIntMap = map[string]int{
 	"I": 1, "II": 2, "III": 3, "IV": 4, "V": 5,
 	"VI": 6, "VII": 7, "VIII": 8, "IX": 9, "X": 10,
 }
 
-var intToRomanMap = []string{
-	"", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX", "X",
-	"XI", "XII", "XIII", "XIV", "XV", "XVI", "XVII", "XVIII", "XIX", "XX",
+var intToRomanMap = map[int]string{
+	1: "I", 2: "II", 3: "III", 4: "IV", 5: "V",
+	6: "VI", 7: "VII", 8: "VIII", 9: "IX", 10: "X",
 }
 
-func romanToInt(roman string) (int, error) {
-	if value, exists := romanToIntMap[roman]; exists {
-		return value, nil
+func toInt(roman string) (int, error) {
+	if val, ok := romanToIntMap[roman]; ok {
+		return val, nil
 	}
-	return 0, errors.New("invalid Roman numeral")
+	return 0, errors.New("недопустимое римское число")
 }
 
-func intToRoman(num int) (string, error) {
-	if num <= 0 || num >= len(intToRomanMap) {
-		return "", errors.New("resulting Roman numeral out of range")
+func toRoman(num int) (string, error) {
+	if num < 1 {
+		return "", errors.New("результат меньше единицы для римских чисел недопустим")
 	}
-	return intToRomanMap[num], nil
-}
-
-func isRomanNumeral(input string) bool {
-	_, exists := romanToIntMap[input]
-	return exists
-}
-
-func performOperation(a, b int, op string) (int, error) {
-	switch op {
-	case "+":
-		return a + b, nil
-	case "-":
-		return a - b, nil
-	case "*":
-		return a * b, nil
-	case "/":
-		if b == 0 {
-			return 0, errors.New("division by zero")
-		}
-		return a / b, nil
-	default:
-		return 0, errors.New("invalid operator")
+	if val, ok := intToRomanMap[num]; ok {
+		return val, nil
 	}
+	return "", errors.New("число выходит за пределы поддерживаемых значений")
 }
 
-func calculate(input string) (string, error) {
-	// Remove spaces
-	input = strings.ReplaceAll(input, " ", "")
+func calculate(expression string) (string, error) {
+	// Удаляем пробелы и разбиваем строку на операнды и оператор
+	expression = strings.ReplaceAll(expression, " ", "")
+	var operator string
+	var operands []string
 
-	// Check if input matches the pattern "number operator number"
-	r := regexp.MustCompile(`^(\d+|[IVXLCDM]+)([\+\-\*/])(\d+|[IVXLCDM]+)$`)
-	matches := r.FindStringSubmatch(input)
-	if matches == nil {
-		return "", errors.New("invalid input format")
+	if strings.Contains(expression, "+") {
+		operands = strings.Split(expression, "+")
+		operator = "+"
+	} else if strings.Contains(expression, "-") {
+		operands = strings.Split(expression, "-")
+		operator = "-"
+	} else if strings.Contains(expression, "*") {
+		operands = strings.Split(expression, "*")
+		operator = "*"
+	} else if strings.Contains(expression, "/") {
+		operands = strings.Split(expression, "/")
+		operator = "/"
+	} else {
+		return "", errors.New("неверный формат математической операции")
 	}
 
-	aStr, op, bStr := matches[1], matches[2], matches[3]
+	if len(operands) != 2 {
+		return "", errors.New("формат математической операции не удовлетворяет заданию")
+	}
 
-	var a, b int
-	var err error
-	romanMode := false
+	operand1 := operands[0]
+	operand2 := operands[1]
 
-	// Determine if the input is in Roman numerals or Arabic numbers
-	if isRomanNumeral(aStr) && isRomanNumeral(bStr) {
-		romanMode = true
-		a, err = romanToInt(aStr)
-		if err != nil {
-			return "", err
+	var num1, num2 int
+	var isRoman bool
+
+	// Проверяем, являются ли операнды римскими или арабскими числами
+	if n1, err := strconv.Atoi(operand1); err == nil {
+		if n2, err := strconv.Atoi(operand2); err == nil {
+			num1 = n1
+			num2 = n2
+		} else {
+			return "", errors.New("используются одновременно разные системы счисления или неподходящие числа")
 		}
-		b, err = romanToInt(bStr)
-		if err != nil {
-			return "", err
-		}
-	} else if !isRomanNumeral(aStr) && !isRomanNumeral(bStr) {
-		a, err = strconv.Atoi(aStr)
-		if err != nil {
-			return "", err
-		}
-		b, err = strconv.Atoi(bStr)
-		if err != nil {
-			return "", err
+	} else if n1, err := toInt(operand1); err == nil {
+		if n2, err := toInt(operand2); err == nil {
+			num1 = n1
+			num2 = n2
+			isRoman = true
+		} else {
+			return "", errors.New("используются одновременно разные системы счисления или неподходящие числа")
 		}
 	} else {
-		return "", errors.New("mixed numeral systems are not allowed")
+		return "", errors.New("используются одновременно разные системы счисления или неподходящие числа")
 	}
 
-	if a < 1 || a > 10 || b < 1 || b > 10 {
-		return "", errors.New("numbers must be between 1 and 10 inclusive")
+	if num1 < 1 || num1 > 10 || num2 < 1 || num2 > 10 {
+		return "", errors.New("числа должны быть в диапазоне от 1 до 10 включительно")
 	}
 
-	result, err := performOperation(a, b, op)
-	if err != nil {
-		return "", err
-	}
-
-	if romanMode {
-		if result < 1 {
-			return "", errors.New("resulting Roman numeral must be positive")
+	// Выполняем арифметическую операцию
+	var result int
+	switch operator {
+	case "+":
+		result = num1 + num2
+	case "-":
+		result = num1 - num2
+	case "*":
+		result = num1 * num2
+	case "/":
+		if num2 == 0 {
+			return "", errors.New("деление на ноль недопустимо")
 		}
-		return intToRoman(result)
+		result = num1 / num2
+	}
+
+	// Возвращаем результат в нужной системе счисления
+	if isRoman {
+		return toRoman(result)
 	}
 	return strconv.Itoa(result), nil
 }
 
 func main() {
-	if len(os.Args) != 2 {
-		fmt.Println("Usage: go run calc.go <expression>")
-		return
-	}
+	fmt.Print("Введите математическую операцию: ")
+	var expression string
+	fmt.Scanln(&expression)
 
-	input := os.Args[1]
-	result, err := calculate(input)
+	result, err := calculate(expression)
 	if err != nil {
-		fmt.Println("Error:", err)
-		return
+		fmt.Println("Ошибка:", err)
+	} else {
+		fmt.Println("Результат:", result)
 	}
-
-	fmt.Println(result)
 }
